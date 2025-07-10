@@ -1,13 +1,73 @@
 /* CSS Variables for Theme Management */
 :root {
-  /* Light theme colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --text-primary: #282c34;
-  --text-secondary: #61dafb;
-  --border-color: #e9ecef;
-  --button-bg: #007bff;
-  --button-text: #ffffff;
+  /* Custom Theme for S&P 500 Dashboard */
+  --primary: #1a237e;
+  --secondary: #374151;
+  --accent: #8884d8;
+  --bg-primary: #f9faff;
+  --bg-secondary: #ffffff;
+  --text-primary: #2a2a33;
+  --text-secondary: #444760;
+  --border-color: #e3e3ee;
+  --button-bg: var(--primary);
+  --button-text: #fff;
+}
+
+/* Card and grid styles */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-gap: 24px;
+}
+
+.responsive-card {
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  box-shadow: 0 2px 12px 0 rgba(60,60,110,0.08);
+  padding: 22px;
+  min-width: 240px;
+  min-height: 170px;
+  transition: box-shadow .15s;
+}
+
+/* Accent Buttons */
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 7px;
+  border: none;
+  padding: 11px 28px;
+  box-shadow: 0 1.5px 8px 0 rgba(80,80,120,0.06);
+  cursor: pointer;
+  transition: background 0.13s;
+}
+.btn-accent:hover { background: #756fd8; }
+
+/* Details Modal */
+.details-modal {
+  z-index: 1200;
+  position: fixed;
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(55,65,81,0.13);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 990px) {
+  .card-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 680px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 [data-theme="dark"] {
