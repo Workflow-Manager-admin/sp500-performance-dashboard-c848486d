@@ -1,0 +1,4 @@
+{
+    "command": "npm run test",
+    "working_directory": "/home/kavia/workspace/code-generation/sp500-performance-dashboard-c848486d/react_sp500_dashboard_frontend"
+}
