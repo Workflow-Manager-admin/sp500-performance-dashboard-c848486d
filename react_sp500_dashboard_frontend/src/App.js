@@ -59,6 +59,16 @@ function App() {
       ? parseFloat(v).toLocaleString(undefined, { maximumFractionDigits: 4 })
       : (v && !isNaN(Number(v)) ? Number(v).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "-");
 
+  // Helper: For "Last Updated" column, try fields like "LatestQuarter" or fallback to "-".
+  const showLastUpdated = (stock) => {
+    // Alpha Vantage "OVERVIEW" includes "LatestQuarter" e.g. "2024-03-31" or "2023-12-31"
+    // If not available, fallback to fetchedAt (not present), so fallback to "-"
+    if (stock && stock.raw && stock.raw.LatestQuarter)
+      return stock.raw.LatestQuarter;
+    // Optionally show "updated" timestamp if backend/app provides one in future
+    return "-";
+  };
+
   return (
     <div className="App" style={{ minHeight: '100vh', background: "#f9faff" }}>
       <header className="App-header" style={{
@@ -115,7 +125,7 @@ function App() {
                     width: "100%",
                     borderCollapse: "separate",
                     borderSpacing: 0,
-                    minWidth: 890
+                    minWidth: 1400
                   }}>
                     <thead>
                       <tr>
@@ -123,7 +133,7 @@ function App() {
                           textAlign: "left", color: COLORS.primary, fontWeight: 800,
                           padding: "7px 18px", fontSize: 17, letterSpacing: ".01em", background: "transparent", border: 0
                         }}>Symbol</th>
-                        {METRICS_LIST.slice(0, 3).map(metric => (
+                        {METRICS_LIST.map(metric => (
                           <th key={metric.key} style={{
                             textAlign: "left",
                             fontWeight: 700,
@@ -131,7 +141,8 @@ function App() {
                             fontSize: 15,
                             padding: "7px 9px",
                             background: "transparent",
-                            border: 0
+                            border: 0,
+                            whiteSpace: "nowrap"
                           }}>{metric.name}</th>
                         ))}
                         <th style={{
@@ -152,6 +163,15 @@ function App() {
                           background: "transparent",
                           border: 0
                         }}>Disposition</th>
+                        <th style={{
+                          textAlign: "left",
+                          fontWeight: 700,
+                          color: COLORS.secondary,
+                          fontSize: 15,
+                          padding: "7px 9px",
+                          background: "transparent",
+                          border: 0
+                        }}>Last Updated</th>
                         <th style={{ padding: 0, background: 'transparent', border: 0 }}></th>
                       </tr>
                     </thead>
@@ -172,7 +192,7 @@ function App() {
                           }}>
                             {stock.symbol}
                           </td>
-                          {METRICS_LIST.slice(0, 3).map(metric => (
+                          {METRICS_LIST.map(metric => (
                             <td key={metric.key} style={{
                               fontFamily: "monospace",
                               color: COLORS.accent,
@@ -201,6 +221,15 @@ function App() {
                             })[stock.disposition] || "#888"
                           }}>
                             {stock.disposition}
+                          </td>
+                          <td style={{
+                            minWidth: 104,
+                            padding: "8px 10px",
+                            fontWeight: 600,
+                            fontSize: 15,
+                            color: COLORS.secondary
+                          }}>
+                            {showLastUpdated(stock)}
                           </td>
                           <td style={{ minWidth: 75, padding: "6px 8px" }}>
                             <button
