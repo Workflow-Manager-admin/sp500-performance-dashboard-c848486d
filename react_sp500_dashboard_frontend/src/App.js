@@ -3,9 +3,10 @@ import './App.css';
 import { SP500_SYMBOLS } from './sp500';
 import { fetchSP500Quotes } from './api';
 import { evaluateStocks, METRICS_LIST } from './evaluate';
-import StockCard from './StockCard';
+import StockCard from './StockCard'; // No longer used after removing grid
 import DetailsModal from './DetailsModal';
 import LoadingIndicator from './LoadingIndicator';
+import BarChart from './BarChart';
 
 // Color palette for theme
 const COLORS = {
@@ -39,7 +40,6 @@ function App() {
         setStocksRaw(stocks);
         setEvaluatedStocks(evaluateStocks(stocks));
       } catch (e) {
-        // fallback in error case
         setStocksRaw([]);
         setEvaluatedStocks([]);
       }
@@ -52,6 +52,12 @@ function App() {
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
+
+  // Helper: Show short metric value, or "-"
+  const showValue = v =>
+    typeof v === "number" && !isNaN(v)
+      ? parseFloat(v).toLocaleString(undefined, { maximumFractionDigits: 4 })
+      : (v && !isNaN(Number(v)) ? Number(v).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "-");
 
   return (
     <div className="App" style={{ minHeight: '100vh', background: "#f9faff" }}>
@@ -72,8 +78,8 @@ function App() {
         <div style={{ fontWeight: 700, fontSize: "2rem", color: COLORS.primary, letterSpacing: ".03em" }}>
           S&P 500 Dashboard
         </div>
-        <button 
-          className="theme-toggle" 
+        <button
+          className="theme-toggle"
           onClick={toggleTheme}
           aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
@@ -81,32 +87,159 @@ function App() {
         </button>
       </header>
       <main style={{
-        margin: "0 auto", maxWidth: 1300, padding: "38px 18px 68px 18px"
+        margin: "0 auto", maxWidth: 1300, padding: "38px 2vw 68px 2vw"
       }}>
         {loading
           ? <LoadingIndicator progress={progress} />
           : (
             evaluatedStocks.length === 0
-              ? <div style={{color: COLORS.primary, fontWeight: 600, fontSize: 22, textAlign: "center", marginTop: 24}}>No stock data available.</div>
-              : <div>
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                    gridGap: 24
+              ? <div style={{
+                  color: COLORS.primary,
+                  fontWeight: 600,
+                  fontSize: 22,
+                  textAlign: "center",
+                  marginTop: 24
+                }}>No stock data available.</div>
+              :
+              <div>
+                <div className="dashboard-table-container" style={{
+                  background: "#fff",
+                  borderRadius: 18,
+                  boxShadow: "0 1.5px 12px 0 rgba(60,60,110,0.06)",
+                  padding: "18px 0 8px 0",
+                  overflowX: "auto",
+                  border: "1px solid #e3e3ee",
+                  marginBottom: 8
+                }}>
+                  <table className="dashboard-table" style={{
+                    width: "100%",
+                    borderCollapse: "separate",
+                    borderSpacing: 0,
+                    minWidth: 890
                   }}>
-                    {evaluatedStocks.map(stock => (
-                      <StockCard
-                        key={stock.symbol}
-                        stock={stock}
-                        accent={COLORS.accent}
-                        onDetails={setSelectedStock}
-                      />
-                    ))}
-                  </div>
-                  <div style={{marginTop: 30, color: "#888", fontSize: 13, textAlign: "center"}}>
-                    Data powered by Alpha Vantage. For best experience, provide your Alpha Vantage API key in <code>.env</code>.
-                  </div>
+                    <thead>
+                      <tr>
+                        <th style={{
+                          textAlign: "left", color: COLORS.primary, fontWeight: 800,
+                          padding: "7px 18px", fontSize: 17, letterSpacing: ".01em", background: "transparent", border: 0
+                        }}>Symbol</th>
+                        {METRICS_LIST.slice(0, 3).map(metric => (
+                          <th key={metric.key} style={{
+                            textAlign: "left",
+                            fontWeight: 700,
+                            color: COLORS.secondary,
+                            fontSize: 15,
+                            padding: "7px 9px",
+                            background: "transparent",
+                            border: 0
+                          }}>{metric.name}</th>
+                        ))}
+                        <th style={{
+                          textAlign: "left",
+                          fontWeight: 700,
+                          color: COLORS.secondary,
+                          fontSize: 15,
+                          padding: "7px 9px",
+                          background: "transparent",
+                          border: 0
+                        }}>Score</th>
+                        <th style={{
+                          textAlign: "left",
+                          fontWeight: 700,
+                          color: COLORS.secondary,
+                          fontSize: 15,
+                          padding: "7px 9px",
+                          background: "transparent",
+                          border: 0
+                        }}>Disposition</th>
+                        <th style={{ padding: 0, background: 'transparent', border: 0 }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {evaluatedStocks.map(stock => (
+                        <tr key={stock.symbol}
+                          style={{
+                            background: "#fcfcff",
+                            borderBottom: "1px solid #f1f2fe",
+                            transition: "background 0.18s",
+                            borderRadius: 14
+                          }}
+                          onClick={() => setSelectedStock(stock)}
+                        >
+                          <td style={{
+                            fontWeight: 700, color: COLORS.primary, fontSize: 17,
+                            padding: "8px 18px 8px 18px", cursor: "pointer"
+                          }}>
+                            {stock.symbol}
+                          </td>
+                          {METRICS_LIST.slice(0, 3).map(metric => (
+                            <td key={metric.key} style={{
+                              fontFamily: "monospace",
+                              color: COLORS.accent,
+                              fontWeight: 600,
+                              fontSize: 15,
+                              padding: "8px 9px"
+                            }}>
+                              {showValue(stock.metrics.find(m => m.key === metric.key)?.raw)}
+                            </td>
+                          ))}
+                          <td style={{
+                            minWidth: 120,
+                            padding: "8px 10px 8px 9px"
+                          }}>
+                            <BarChart score={stock.score} color={COLORS.accent} height={18} />
+                          </td>
+                          <td style={{
+                            minWidth: 88,
+                            padding: "8px 10px",
+                            fontWeight: 700,
+                            fontSize: 16,
+                            color: ({
+                              Buy: COLORS.primary,
+                              Sell: "#e74c3c",
+                              Hold: COLORS.secondary
+                            })[stock.disposition] || "#888"
+                          }}>
+                            {stock.disposition}
+                          </td>
+                          <td style={{ minWidth: 75, padding: "6px 8px" }}>
+                            <button
+                              className="btn-accent"
+                              style={{
+                                background: COLORS.accent,
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 8,
+                                fontWeight: 600,
+                                fontSize: 15,
+                                padding: "7px 18px",
+                                letterSpacing: ".03em",
+                                cursor: "pointer",
+                                transition: "background 0.15s"
+                              }}
+                              onClick={e => {
+                                e.stopPropagation();
+                                setSelectedStock(stock);
+                              }}
+                              aria-label={`View details for ${stock.symbol}`}
+                            >
+                              Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
+                <div style={{
+                  marginTop: 17,
+                  color: "#888",
+                  fontSize: 13,
+                  textAlign: "center"
+                }}>
+                  Data powered by Alpha Vantage. For best experience, provide your Alpha Vantage API key in <code>.env</code>.
+                </div>
+              </div>
           )
         }
         <DetailsModal
