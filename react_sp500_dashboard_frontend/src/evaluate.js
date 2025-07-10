@@ -35,7 +35,13 @@ export function evaluateStocks(rawStocks) {
     METRICS_LIST.forEach(metric =>
       out[metric.key] = parseFloat(s[metric.key] || s[metric.key.toLowerCase()] || 0)
     );
-    return { symbol: s.symbol, ...out, raw: s };
+    // Attach lastUpdated and fetchedAt directly to raw for access in UI
+    let wrappedRaw = {
+      ...s,
+      lastUpdated: s.lastUpdated || s.LatestQuarter || "-",
+      fetchedAt: s.fetchedAt || s._fetchedAt || null
+    };
+    return { symbol: s.symbol, ...out, raw: wrappedRaw };
   });
 
   const metricExtremes = {};

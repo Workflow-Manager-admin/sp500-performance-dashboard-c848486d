@@ -59,14 +59,24 @@ function App() {
       ? parseFloat(v).toLocaleString(undefined, { maximumFractionDigits: 4 })
       : (v && !isNaN(Number(v)) ? Number(v).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "-");
 
-  // Helper: For "Last Updated" column, try fields like "LatestQuarter" or fallback to "-".
+  // Helper: For "Last Updated" column, show API's 'LatestQuarter' AND actual fetch time.
   const showLastUpdated = (stock) => {
     // Alpha Vantage "OVERVIEW" includes "LatestQuarter" e.g. "2024-03-31" or "2023-12-31"
-    // If not available, fallback to fetchedAt (not present), so fallback to "-"
-    if (stock && stock.raw && stock.raw.LatestQuarter)
-      return stock.raw.LatestQuarter;
-    // Optionally show "updated" timestamp if backend/app provides one in future
-    return "-";
+    // Additionally, show real fetch time for debugging API currency.
+    let apiFreshness = (stock && stock.raw && stock.raw.LatestQuarter)
+      ? stock.raw.LatestQuarter
+      : (stock && stock.raw && stock.raw.lastUpdated) ? stock.raw.lastUpdated : "-";
+    let fetchedAt = (stock && stock.raw && stock.raw.fetchedAt)
+      ? new Date(stock.raw.fetchedAt).toLocaleString()
+      : (stock && stock.raw && stock.raw._fetchedAt)
+        ? new Date(stock.raw._fetchedAt).toLocaleString()
+        : "-";
+    // UI: Main = LatestQuarter, tooltip shows fetch timestamp for verification.
+    return (
+      <span title={`API Fetched: ${fetchedAt}`}>
+        {apiFreshness}
+      </span>
+    );
   };
 
   return (
@@ -267,6 +277,36 @@ function App() {
                   textAlign: "center"
                 }}>
                   Data powered by Alpha Vantage. For best experience, provide your Alpha Vantage API key in <code>.env</code>.
+                </div>
+                {/* API Connectivity Status Panel */}
+                <div style={{
+                  background: "#f5f7fe", border: "1px solid #e3e3ee",
+                  borderRadius: 10, margin: "24px auto 0 auto",
+                  maxWidth: 1200, padding: 14, color: "#222", fontSize: 14
+                }}>
+                  <strong>API Connectivity Check:</strong><br />
+                  {stocksRaw && stocksRaw.length > 0 && stocksRaw.filter(s => s.error).length === 0
+                    ? <span style={{ color: "green", fontWeight: 600 }}>All symbols fetched successfully from Alpha Vantage.</span>
+                    : stocksRaw && stocksRaw.length > 0
+                      ? (
+                        <span style={{ color: "#c00", fontWeight: 600 }}>
+                          Some stocks failed to fetch from Alpha Vantage.<br />
+                          {stocksRaw.filter(s => s.error).map(s =>
+                            <div key={s.symbol}>
+                              Symbol: <b>{s.symbol}</b> – Error fetching data.
+                            </div>
+                          )}
+                        </span>
+                        )
+                      : <span>Not loaded yet.</span>
+                  }
+                  <div style={{ color: "#555", marginTop: 7 }}>
+                    <b>Latest API fetch:</b>{" "}
+                    {stocksRaw && stocksRaw.length > 0 && stocksRaw[0].fetchedAt
+                      ? new Date(stocksRaw[0].fetchedAt).toLocaleString()
+                      : "-"}
+                    {" "}— displaying up-to-date results per each Alpha Vantage query.
+                  </div>
                 </div>
               </div>
           )
